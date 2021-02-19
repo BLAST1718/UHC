@@ -1,0 +1,4 @@
+#Enter the rules of your game. They will be displayed in an UI
+# Use \n to go to the line and don't forget the colors!
+rules: 'My rules'
+

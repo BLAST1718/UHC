@@ -7,8 +7,8 @@ use Nathan\Main;
 use Nathan\Scoreboard\Scoreboard;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
-use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\utils\Config;
+use function file_exists;
 
 /**
  * Class JoinEvent
@@ -22,6 +22,10 @@ class JoinEvent implements Listener
     public function onJoin(PlayerJoinEvent $ev)
     {
         $player = $ev->getPlayer();
+        if(!file_exists(Main::getInstance()->getDataFolder() . 'players/' . strtolower($player->getName()) . '.yml')){
+            API::createAccount($player);
+            Main::getInstance()->saveResource(Main::getInstance()->getDataFolder() . 'players/' . strtolower($player->getName()) . '.yml', Config::YAML);
+        }
         $config = new Config(Main::getInstance()->getDataFolder() . 'players/' . strtolower($player->getName()) . '.yml', Config::YAML);
         $ev->setJoinMessage('§7[§a+§7] §a' . $player->getName() . ' §8(' . API::getOnlinePlayers() . ')');
         Main::getInstance()->scoreboards = new Scoreboard($player, $player->getName(), '§l§bUHC');
@@ -29,23 +33,20 @@ class JoinEvent implements Listener
             case 'inProgress':
                 if($config->get('statut') === 'disconnected'){
                     $config->set('statut', 'alive');
+                }else{
+                    $config->set('statut', 'spectator');
                 }
                 break;
 
             case 'inDefinition':
-                if($player->hasPermission('uhc.host')){
-
-                }
                 $config->set('statut', 'pending');
                 break;
 
             case 'Finished':
-                if($player->hasPermission('uhc.host') || $player->hasPermission('uhc.moderator')){
-
-                }else{
-
-                }
+                $config->set('statut', 'spectator');
                 break;
         }
+        $config->save();
+        API::setInventory($player);
     }
 }
